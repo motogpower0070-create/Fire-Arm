@@ -1,504 +1,404 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Apex Ops - Tactical 3D</title>
+  <title>Apex Protocol C++ & WebGL Tactical FPS Studio</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts & FontAwesome -->
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800;900&family=JetBrains+Mono:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- Three.js and Post-Processing Libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            orbitron: ['Orbitron', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+            sans: ['Inter', 'sans-serif']
+          },
+          colors: {
+            cyber: {
+              black: '#030712',
+              dark: '#0b1329',
+              card: 'rgba(15, 23, 42, 0.85)',
+              neonCyan: '#00f3ff',
+              neonAmber: '#ffaa00',
+              neonRed: '#ff2a5f',
+              accent: '#3b82f6'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
   <style>
     * {
       box-sizing: border-box;
-      touch-action: none;
       user-select: none;
       -webkit-user-select: none;
     }
-    body {
+    body, html {
       margin: 0;
       padding: 0;
-      background: #020408;
-      color: #fff;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      overflow: hidden;
       width: 100vw;
       height: 100vh;
+      overflow: hidden;
+      background-color: #030712;
+      color: #f3f4f6;
+      font-family: 'Inter', sans-serif;
     }
-    .screen {
-      position: absolute;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: radial-gradient(circle at center, #0f172a 0%, #020408 100%);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      z-index: 20;
-      padding: 20px;
-    }
-    .hidden { display: none !important; }
-    
-    h1 {
-      font-size: 2.5rem;
-      color: #00ffcc;
-      text-transform: uppercase;
-      letter-spacing: 4px;
-      margin-bottom: 5px;
-      text-shadow: 0 0 20px rgba(0, 255, 204, 0.6);
-      text-align: center;
-    }
-    .subtitle { color: #8fa1c7; margin-bottom: 30px; font-size: 1rem; text-align: center; }
-    
-    .btn {
-      background: linear-gradient(135deg, #00ffcc 0%, #0077ff 100%);
-      color: #020408;
-      border: none;
-      padding: 16px 45px;
-      font-size: 1.2rem;
-      font-weight: bold;
-      border-radius: 30px;
-      cursor: pointer;
-      box-shadow: 0 0 25px rgba(0, 255, 204, 0.4);
-      text-transform: uppercase;
-      letter-spacing: 2px;
-    }
-    .btn:active { transform: scale(0.95); }
 
-    /* Loading Bar */
-    #loading-bar-container {
-      width: 80%;
-      max-width: 300px;
+    /* Custom Scrollbar for Code View */
+    ::-webkit-scrollbar {
+      width: 8px;
       height: 8px;
-      background: rgba(255,255,255,0.1);
+    }
+    ::-webkit-scrollbar-track {
+      background: #090d16;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1e293b;
       border-radius: 4px;
-      overflow: hidden;
-      margin-top: 20px;
     }
-    #loading-bar {
-      width: 0%;
-      height: 100%;
-      background: #00ffcc;
-      box-shadow: 0 0 10px #00ffcc;
-      transition: width 0.1s linear;
+    ::-webkit-scrollbar-thumb:hover {
+      background: #00f3ff;
     }
 
-    /* Game HUD */
-    #hud {
+    /* Glassmorphism card effects */
+    .glass-panel {
+      background: rgba(11, 19, 41, 0.75);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(0, 243, 255, 0.15);
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+    }
+
+    .glow-cyan {
+      box-shadow: 0 0 15px rgba(0, 243, 255, 0.35);
+    }
+    .glow-red {
+      box-shadow: 0 0 15px rgba(ff, 42, 95, 0.4);
+    }
+
+    /* Crosshair overlay */
+    #crosshair {
+      pointer-events: none;
+      transition: transform 0.05s ease-out;
+    }
+    .crosshair-line {
       position: absolute;
-      top: 0; left: 0;
+      background-color: rgba(0, 243, 255, 0.85);
+      box-shadow: 0 0 6px rgba(0, 243, 255, 0.8);
+    }
+
+    /* Code Syntax Highlighting Theme */
+    .code-keyword { color: #ff79c6; font-weight: bold; }
+    .code-type { color: #8be9fd; font-weight: bold; }
+    .code-string { color: #f1fa8c; }
+    .code-comment { color: #6272a4; font-style: italic; }
+    .code-function { color: #50fa7b; }
+    .code-macro { color: #ffb86c; font-weight: bold; }
+    .code-number { color: #bd93f9; }
+
+    /* Vignette & Hit Flash Overlays */
+    #vignette-overlay {
+      pointer-events: none;
+      background: radial-gradient(circle, transparent 60%, rgba(3, 7, 18, 0.85) 100%);
+    }
+    #hit-flash {
+      pointer-events: none;
+      background: rgba(255, 42, 95, 0.3);
+      transition: opacity 0.15s ease-out;
+      opacity: 0;
+    }
+
+    /* Canvas styling */
+    #fps-canvas {
       width: 100%;
-      padding: 15px 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      z-index: 10;
-      pointer-events: none;
-      font-weight: bold;
-      font-size: 1.1rem;
-      text-shadow: 0 2px 4px rgba(0,0,0,0.9);
-    }
-    .hud-box {
-      background: rgba(10, 15, 25, 0.8);
-      border: 1px solid rgba(0, 255, 204, 0.4);
-      padding: 8px 16px;
-      border-radius: 10px;
-    }
-
-    /* Canvas */
-    canvas {
+      height: 100%;
       display: block;
-      width: 100vw;
-      height: 100vh;
-      background: #111;
     }
-
-    /* Controls Overlay */
-    #controls {
-      position: absolute;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      z-index: 10;
-      pointer-events: none;
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-end;
-      padding: 30px;
-    }
-    .joystick-zone {
-      width: 130px; height: 130px;
-      background: rgba(255, 255, 255, 0.05);
-      border: 2px solid rgba(255, 255, 255, 0.15);
-      border-radius: 50%;
-      position: relative;
-      pointer-events: auto;
-    }
-    .joystick-knob {
-      width: 50px; height: 50px;
-      background: rgba(0, 255, 204, 0.6);
-      border: 2px solid #fff;
-      border-radius: 50%;
-      position: absolute;
-      top: 40px; left: 40px;
-    }
-    .action-panel {
-      display: flex;
-      gap: 15px;
-      pointer-events: auto;
-    }
-    .ctrl-btn {
-      width: 80px; height: 80px;
-      background: radial-gradient(circle, #ff3366 0%, #aa0022 100%);
-      border: 3px solid #ff80ab;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: bold;
-      font-size: 1rem;
-      box-shadow: 0 0 15px rgba(255, 51, 102, 0.5);
-    }
-    .ctrl-btn:active { transform: scale(0.9); }
   </style>
 </head>
-<body>
+<body class="bg-cyber-black text-gray-100 flex flex-col h-screen w-screen overflow-hidden">
 
-  <!-- LOBBY SCREEN -->
-  <div id="lobby-screen" class="screen">
-    <h1>Apex Ops</h1>
-    <p class="subtitle">Tactical 3D Combat Simulator</p>
-    <button class="btn" id="start-btn">Tap to Play</button>
-  </div>
-
-  <!-- LOADING SCREEN -->
-  <div id="loading-screen" class="screen hidden">
-    <h1>Loading Arena</h1>
-    <p class="subtitle" id="load-text">Preparing tactical assets...</p>
-    <div id="loading-bar-container">
-      <div id="loading-bar"></div>
+  <!-- HEADER / NAVIGATION -->
+  <header class="h-14 glass-panel z-30 flex items-center justify-between px-6 border-b border-cyan-500/20 shrink-0">
+    <div class="flex items-center space-x-3">
+      <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-cyber-black font-black font-orbitron text-lg shadow-lg shadow-cyan-500/30">
+        A
+      </div>
+      <div>
+        <h1 class="font-orbitron font-bold text-base tracking-wider bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent">
+          APEX PROTOCOL C++ / WebGL
+        </h1>
+        <p class="text-[10px] text-gray-400 font-mono -mt-1">ENGINE: UNREAL C++ ARCHITECTURE / WEBGL 2.0 BLOOM PIPELINE</p>
+      </div>
     </div>
-  </div>
 
-  <!-- GAME OVER SCREEN -->
-  <div id="gameover-screen" class="screen hidden">
-    <h1 id="go-title">Mission Failed</h1>
-    <p class="subtitle" id="go-stats">Enemies Eliminated: 0</p>
-    <button class="btn" id="restart-btn">Main Menu</button>
-  </div>
-
-  <!-- HUD -->
-  <div id="hud" class="hidden">
-    <div class="hud-box" id="hud-score">Kills: 0</div>
-    <div class="hud-box" id="hud-health">HP: 100</div>
-  </div>
-
-  <!-- CONTROLS -->
-  <div id="controls" class="hidden">
-    <div class="joystick-zone" id="joystick">
-      <div class="joystick-knob" id="knob"></div>
+    <!-- Mode Selector Tabs -->
+    <div class="flex bg-slate-900/80 p-1 rounded-xl border border-slate-700/50 space-x-1">
+      <button id="tab-game" onclick="switchTab('game')" class="px-5 py-1.5 rounded-lg text-xs font-orbitron font-semibold transition-all duration-200 flex items-center space-x-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-gray-950 shadow-md shadow-cyan-500/20">
+        <i class="fa-solid font-bold fa-gamepad"></i>
+        <span>PLAY FPS ARENA</span>
+      </button>
+      <button id="tab-code" onclick="switchTab('code')" class="px-5 py-1.5 rounded-lg text-xs font-orbitron font-semibold text-gray-400 hover:text-cyan-400 transition-all duration-200 flex items-center space-x-2 hover:bg-slate-800/50">
+        <i class="fa-solid fa-code text-cyan-400"></i>
+        <span>VIEW C++ SOURCE CODE</span>
+      </button>
     </div>
-    <div class="action-panel">
-      <div class="ctrl-btn" id="fire-btn">FIRE</div>
-    </div>
-  </div>
 
-  <canvas id="gameCanvas"></canvas>
+    <!-- Quick Stats Header -->
+    <div class="hidden md:flex items-center space-x-6 font-mono text-xs">
+      <div class="flex items-center space-x-2">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span class="text-gray-400">GRAPHICS:</span>
+        <span class="text-emerald-400 font-bold">RAYTRACED / UNREAL POST-FX</span>
+      </div>
+      <div class="flex items-center space-x-2">
+        <i class="fa-solid fa-microchip text-cyan-400"></i>
+        <span class="text-gray-400">FPS:</span>
+        <span id="fps-display" class="text-cyan-400 font-bold">60</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTENT CONTAINER -->
+  <main class="relative flex-1 w-full h-full overflow-hidden">
+
+    <!-- ==================== TAB 1: PLAYABLE FPS ARENA ==================== -->
+    <div id="view-game" class="relative w-full h-full">
+      <!-- WebGL Canvas -->
+      <canvas id="fps-canvas"></canvas>
+
+      <!-- Hit Red Flash Overlay -->
+      <div id="hit-flash" class="absolute inset-0 z-10"></div>
+      
+      <!-- Vignette Overlay -->
+      <div id="vignette-overlay" class="absolute inset-0 z-10"></div>
+
+      <!-- Start / Pointer Lock Overlay Screen -->
+      <div id="start-overlay" class="absolute inset-0 z-20 flex flex-col items-center justify-center bg-gray-950/80 backdrop-blur-md">
+        <div class="glass-panel p-8 rounded-2xl max-w-lg w-full text-center border border-cyan-500/30 glow-cyan">
+          <div class="w-16 h-16 rounded-full bg-cyan-500/10 border border-cyan-400 flex items-center justify-center mx-auto mb-4 text-cyan-400 text-2xl">
+            <i class="fa-solid fa-crosshairs"></i>
+          </div>
+          <h2 class="font-orbitron text-2xl font-black text-white tracking-wide mb-2">APEX TACTICAL SIMULATOR</h2>
+          <p class="text-gray-300 text-xs font-sans mb-6 leading-relaxed">
+            Experience realistic C++ shader pipeline visual effects directly in WebGL. Featuring dynamic metallic reflection, high-intensity muzzle flash bloom, real-time procedural weapon sway, recoil impulse, and spatial target bot AI.
+          </p>
+
+          <!-- Control Guide -->
+          <div class="grid grid-cols-2 gap-3 text-left mb-6 font-mono text-xs bg-slate-900/90 p-4 rounded-xl border border-slate-800">
+            <div class="flex items-center space-x-2"><span class="bg-cyan-500/20 text-cyan-400 px-2 py-0.5 rounded border border-cyan-500/30">WASD</span><span class="text-gray-300">Tactical Move</span></div>
+            <div class="flex items-center space-x-2"><span class="bg-cyan-500/20 text-cyan-400 px-2 py-0.5 rounded border border-cyan-500/30">MOUSE</span><span class="text-gray-300">Aim / Look</span></div>
+            <div class="flex items-center space-x-2"><span class="bg-cyan-500/20 text-cyan-400 px-2 py-0.5 rounded border border-cyan-500/30">L-CLICK</span><span class="text-gray-300">Fire Weapon</span></div>
+            <div class="flex items-center space-x-2"><span class="bg-cyan-500/20 text-cyan-400 px-2 py-0.5 rounded border border-cyan-500/30">R-CLICK</span><span class="text-gray-300">ADS Zoom</span></div>
+            <div class="flex items-center space-x-2"><span class="bg-cyan-500/20 text-cyan-400 px-2 py-0.5 rounded border border-cyan-500/30">R</span><span class="text-gray-300">Reload Ammo</span></div>
+            <div class="flex items-center space-x-2"><span class="bg-cyan-500/20 text-cyan-400 px-2 py-0.5 rounded border border-cyan-500/30">SPACE</span><span class="text-gray-300">Jump</span></div>
+          </div>
+
+          <button id="btn-lock-pointer" class="w-full py-3.5 rounded-xl bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 font-orbitron font-bold text-sm text-gray-950 uppercase tracking-wider hover:brightness-110 active:scale-98 transition-all shadow-lg shadow-cyan-500/30">
+            DEPLOY TO COMBAT ARENA
+          </button>
+        </div>
+      </div>
+
+      <!-- HUD UI OVERLAY -->
+      <div id="hud-overlay" class="absolute inset-0 z-10 pointer-events-none p-6 flex flex-col justify-between">
+        
+        <!-- Top HUD Bar -->
+        <div class="flex justify-between items-start">
+          <!-- Mission Status & Score -->
+          <div class="glass-panel px-4 py-2.5 rounded-xl border border-cyan-500/20 flex items-center space-x-6">
+            <div>
+              <div class="text-[10px] font-mono text-gray-400">TARGETS ELIMINATED</div>
+              <div id="hud-kills" class="font-orbitron font-bold text-2xl text-cyan-400">00</div>
+            </div>
+            <div class="h-8 w-px bg-slate-700"></div>
+            <div>
+              <div class="text-[10px] font-mono text-gray-400">COMBAT SCORE</div>
+              <div id="hud-score" class="font-orbitron font-bold text-2xl text-emerald-400">0000</div>
+            </div>
+          </div>
+
+          <!-- Graphics / Engine Settings Toggle -->
+          <div class="glass-panel p-2 rounded-xl border border-cyan-500/20 flex items-center space-x-3 pointer-events-auto">
+            <button id="btn-toggle-bloom" onclick="toggleBloom()" class="px-3 py-1.5 rounded-lg text-xs font-mono bg-cyan-500/20 border border-cyan-400 text-cyan-300 hover:bg-cyan-500/30 transition-all flex items-center space-x-1.5">
+              <i class="fa-solid fa-wand-magic-sparkles"></i>
+              <span>UNREAL BLOOM: ON</span>
+            </button>
+            <button id="btn-reset-bots" onclick="spawnBots()" class="px-3 py-1.5 rounded-lg text-xs font-mono bg-slate-800 border border-slate-700 text-gray-300 hover:bg-slate-700 transition-all flex items-center space-x-1.5">
+              <i class="fa-solid fa-arrows-rotate"></i>
+              <span>RESPAWN TARGETS</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Center Crosshair Target -->
+        <div id="crosshair" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center">
+          <div class="crosshair-line w-2.5 h-[2px] left-0"></div>
+          <div class="crosshair-line w-2.5 h-[2px] right-0"></div>
+          <div class="crosshair-line h-2.5 w-[2px] top-0"></div>
+          <div class="crosshair-line h-2.5 w-[2px] bottom-0"></div>
+          <div class="w-1 h-1 rounded-full bg-cyan-400 shadow-md shadow-cyan-400"></div>
+        </div>
+
+        <!-- Dynamic Hit Marker indicator -->
+        <div id="hit-marker" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 opacity-0 transition-opacity duration-75 pointer-events-none">
+          <div class="absolute w-2.5 h-0.5 bg-red-500 rotate-45 top-1 left-1"></div>
+          <div class="absolute w-2.5 h-0.5 bg-red-500 -rotate-45 top-1 right-1"></div>
+          <div class="absolute w-2.5 h-0.5 bg-red-500 -rotate-45 bottom-1 left-1"></div>
+          <div class="absolute w-2.5 h-0.5 bg-red-500 rotate-45 bottom-1 right-1"></div>
+        </div>
+
+        <!-- Bottom HUD Bar: Health & Ammo -->
+        <div class="flex justify-between items-end">
+          
+          <!-- Health Panel -->
+          <div class="glass-panel p-4 rounded-2xl border border-emerald-500/20 w-64">
+            <div class="flex justify-between items-center mb-1.5 font-mono text-xs">
+              <span class="text-gray-400 flex items-center space-x-1.5">
+                <i class="fa-solid fa-heart text-red-500"></i>
+                <span>OPERATOR VITALITY</span>
+              </span>
+              <span id="hud-hp-val" class="font-orbitron font-bold text-emerald-400 text-sm">100 HP</span>
+            </div>
+            <div class="w-full bg-slate-900 h-2.5 rounded-full overflow-hidden border border-slate-700/50 p-0.5">
+              <div id="hud-hp-bar" class="h-full bg-gradient-to-r from-emerald-500 to-cyan-400 rounded-full transition-all duration-300" style="width: 100%;"></div>
+            </div>
+          </div>
+
+          <!-- Ammo Panel -->
+          <div class="glass-panel p-4 rounded-2xl border border-amber-500/20 min-w-[200px] text-right">
+            <div class="text-[10px] font-mono text-gray-400 tracking-wider mb-0.5">CURRENT WEAPON / MK-47 CALIBER</div>
+            <div class="flex items-baseline justify-end space-x-1 font-orbitron">
+              <span id="hud-ammo-current" class="text-4xl font-black text-amber-400">30</span>
+              <span class="text-xl text-gray-500">/</span>
+              <span id="hud-ammo-reserve" class="text-lg font-bold text-gray-400">120</span>
+            </div>
+            <div id="hud-reload-indicator" class="text-[10px] font-mono text-cyan-400 hidden animate-pulse">RELOADING MAG...</div>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ==================== TAB 2: C++ SOURCE CODE STUDIO ==================== -->
+    <div id="view-code" class="hidden relative w-full h-full flex flex-col md:flex-row bg-cyber-black">
+      
+      <!-- C++ Code File Navigation Sidebar -->
+      <aside class="w-full md:w-64 bg-slate-950/90 border-r border-slate-800 p-4 shrink-0 flex flex-col">
+        <div class="text-xs font-orbitron font-bold text-cyan-400 tracking-wider mb-4 flex items-center space-x-2">
+          <i class="fa-solid fa-folder-tree text-sm"></i>
+          <span>C++ / UNREAL ENGINE ARCHITECTURE</span>
+        </div>
+
+        <nav class="space-y-1 font-mono text-xs flex-1">
+          <button onclick="selectCodeFile('player')" id="file-btn-player" class="w-full text-left px-3 py-2.5 rounded-lg transition-all flex items-center space-x-2 bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 font-semibold">
+            <i class="fa-regular fa-file-code text-cyan-400"></i>
+            <span>FPSCharacter.cpp</span>
+          </button>
+          <button onclick="selectCodeFile('weapon')" id="file-btn-weapon" class="w-full text-left px-3 py-2.5 rounded-lg transition-all flex items-center space-x-2 hover:bg-slate-900 text-gray-400 hover:text-gray-200">
+            <i class="fa-regular fa-file-code text-amber-400"></i>
+            <span>WeaponSystem.cpp</span>
+          </button>
+          <button onclick="selectCodeFile('ai')" id="file-btn-ai" class="w-full text-left px-3 py-2.5 rounded-lg transition-all flex items-center space-x-2 hover:bg-slate-900 text-gray-400 hover:text-gray-200">
+            <i class="fa-regular fa-file-code text-purple-400"></i>
+            <span>TargetAIController.cpp</span>
+          </button>
+          <button onclick="selectCodeFile('render')" id="file-btn-render" class="w-full text-left px-3 py-2.5 rounded-lg transition-all flex items-center space-x-2 hover:bg-slate-900 text-gray-400 hover:text-gray-200">
+            <i class="fa-regular fa-file-code text-emerald-400"></i>
+            <span>RaytracePipeline.cpp</span>
+          </button>
+        </nav>
+
+        <!-- System Requirements Box -->
+        <div class="glass-panel p-3 rounded-xl border border-slate-800 text-[11px] font-mono text-gray-400 mt-4">
+          <div class="text-cyan-400 font-bold mb-1 flex items-center space-x-1">
+            <i class="fa-solid fa-circle-info"></i>
+            <span>UNREAL ENGINE 5.4+</span>
+          </div>
+          Target API: DirectX 12 / Vulkan<br>
+          C++ Standard: C++20<br>
+          Shaders: HLSL / Raytracing Pipeline
+        </div>
+      </aside>
+
+      <!-- Code Editor Viewport -->
+      <section class="flex-1 flex flex-col h-full overflow-hidden bg-slate-950">
+        <!-- Editor Header Toolbar -->
+        <div class="h-10 bg-slate-900 border-b border-slate-800 px-4 flex items-center justify-between shrink-0 font-mono text-xs">
+          <div class="flex items-center space-x-2 text-gray-300">
+            <i class="fa-solid fa-code-commit text-cyan-400"></i>
+            <span id="code-file-title" class="font-bold text-cyan-300">Source/ApexProtocol/Private/FPSCharacter.cpp</span>
+          </div>
+
+          <button onclick="copyCodeToClipboard()" class="px-3 py-1 rounded bg-slate-800 hover:bg-slate-700 text-cyan-400 border border-slate-700 transition-all flex items-center space-x-1.5 text-xs">
+            <i id="copy-icon" class="fa-regular fa-copy"></i>
+            <span id="copy-btn-text">Copy C++ Source</span>
+          </button>
+        </div>
+
+        <!-- Code Box -->
+        <div class="flex-1 overflow-auto p-6 font-mono text-xs leading-relaxed text-gray-300 bg-gray-950" id="code-container">
+          <pre><code id="code-content" class="whitespace-pre"></code></pre>
+        </div>
+      </section>
+
+    </div>
+
+  </main>
 
   <script>
-    const canvas = document.getElementById("gameCanvas");
-    const ctx = canvas.getContext("2d");
+    /* =========================================================================
+       1. C++ CODE REPOSITORY (Production-Ready Unreal Engine 5 Source Code)
+       ========================================================================= */
+    const CODE_FILES = {
+      player: `// Copyright Apex Protocol Studios. Unreal Engine 5 / C++20 Architecture.
+#include "FPSCharacter.h"
+#include "Camera/CameraComponent.h"
+#include "Components/CapsuleComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "Kismet/KismetMathLibrary.h"
+#include "WeaponSystem.h"
 
-    const lobbyScreen = document.getElementById("lobby-screen");
-    const loadingScreen = document.getElementById("loading-screen");
-    const gameoverScreen = document.getElementById("gameover-screen");
-    const hud = document.getElementById("hud");
-    const controls = document.getElementById("controls");
+AFPSCharacter::AFPSCharacter()
+{
+    PrimaryActorTick.bCanEverTick = true;
 
-    function resize() {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    }
-    window.addEventListener('resize', resize);
-    resize();
+    // High-precision Capsule Collision Setup
+    GetCapsuleComponent()->InitCapsuleSize(40.0f, 95.0f);
+    GetCapsuleComponent()->SetCollisionProfileName(TEXT("Pawn"));
 
-    let gameState = 'lobby'; // lobby, loading, playing, gameover
-    let score = 0;
+    // First Person Camera Component Attached to Head
+    FirstPersonCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
+    FirstPersonCamera->SetupAttachment(GetCapsuleComponent());
+    FirstPersonCamera->SetRelativeLocation(FVector(0.0f, 0.0f, 75.0f)); 
+    FirstPersonCamera->bUsePawnControlRotation = true;
 
-    // Player state (3D Raycasting / Pseudo-3D Perspective)
-    let player = { x: 3.5, y: 3.5, angle: 0, hp: 100 };
-    let bots = [
-      { x: 6.5, y: 6.5, hp: 100, state: 'idle' },
-      { x: 8.5, y: 2.5, hp: 100, state: 'idle' },
-      { x: 2.5, y: 7.5, hp: 100, state: 'idle' }
-    ];
-    let bullets = [];
-    let isFiring = false;
-    let fireCooldown = 0;
+    // Tactical Weapon Mesh Attached to Camera
+    WeaponMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("WeaponMesh"));
+    WeaponMesh->SetupAttachment(FirstPersonCamera);
+    WeaponMesh->SetOnlyOwnerSee(true);
+    WeaponMesh->SetCastShadow(false);
 
-    // Simple Map Grid (1 = Wall, 0 = Empty)
-    const map = [
-      [1,1,1,1,1,1,1,1,1,1],
-      [1,0,0,0,0,1,0,0,0,1],
-      [1,0,1,1,0,1,0,1,0,1],
-      [1,0,0,0,0,0,0,1,0,1],
-      [1,1,1,0,1,1,0,0,0,1],
-      [1,0,0,0,0,1,1,1,0,1],
-      [1,0,1,1,0,0,0,1,0,1],
-      [1,0,0,1,1,1,0,0,0,1],
-      [1,1,0,0,0,0,0,1,1,1],
-      [1,1,1,1,1,1,1,1,1,1]
-    ];
-
-    // Joystick Setup
-    let stickActive = false;
-    let stickCenter = { x: 0, y: 0 };
-    let moveDir = { x: 0, y: 0 };
-    const joystick = document.getElementById("joystick");
-    const knob = document.getElementById("knob");
-
-    joystick.addEventListener("touchstart", (e) => {
-      stickActive = true;
-      const rect = joystick.getBoundingClientRect();
-      stickCenter = { x: rect.left + rect.width/2, y: rect.top + rect.height/2 };
-      updateStick(e.touches[0]);
-    });
-    window.addEventListener("touchmove", (e) => {
-      if (!stickActive) return;
-      for (let t of e.touches) {
-        if (t.clientX < canvas.width / 2) updateStick(t);
-      }
-    });
-    window.addEventListener("touchend", () => {
-      stickActive = false;
-      moveDir = { x: 0, y: 0 };
-      knob.style.transform = `translate(0px, 0px)`;
-    });
-
-    function updateStick(touch) {
-      let dx = touch.clientX - stickCenter.x;
-      let dy = touch.clientY - stickCenter.y;
-      let dist = Math.hypot(dx, dy);
-      let maxDist = 45;
-      if (dist > maxDist) {
-        dx = (dx / dist) * maxDist;
-        dy = (dy / dist) * maxDist;
-      }
-      knob.style.transform = `translate(${dx}px, ${dy}px)`;
-      moveDir = { x: dx / maxDist, y: dy / maxDist };
-    }
-
-    // Look / Aim via Right Side Swipe
-    let lastTouchX = 0;
-    window.addEventListener("touchstart", (e) => {
-      if (e.touches[0].clientX > canvas.width / 2) {
-        lastTouchX = e.touches[0].clientX;
-      }
-    });
-    window.addEventListener("touchmove", (e) => {
-      for (let t of e.touches) {
-        if (t.clientX > canvas.width / 2) {
-          let deltaX = t.clientX - lastTouchX;
-          player.angle += deltaX * 0.005;
-          lastTouchX = t.clientX;
-        }
-      }
-    });
-
-    // Continuous Firing
-    const fireBtn = document.getElementById("fire-btn");
-    fireBtn.addEventListener("touchstart", (e) => { e.preventDefault(); isFiring = true; });
-    fireBtn.addEventListener("touchend", (e) => { e.preventDefault(); isFiring = false; });
-    fireBtn.addEventListener("mousedown", () => { isFiring = true; });
-    fireBtn.addEventListener("mouseup", () => { isFiring = false; });
-
-    // Navigation triggers
-    document.getElementById("start-btn").onclick = () => {
-      lobbyScreen.classList.add("hidden");
-      loadingScreen.classList.remove("hidden");
-      gameState = 'loading';
-      
-      let progress = 0;
-      let bar = document.getElementById("loading-bar");
-      let loadText = document.getElementById("load-text");
-      
-      let loadInterval = setInterval(() => {
-        progress += Math.floor(Math.random() * 15) + 10;
-        if (progress >= 100) {
-          progress = 100;
-          clearInterval(loadInterval);
-          setTimeout(() => {
-            loadingScreen.classList.add("hidden");
-            hud.classList.remove("hidden");
-            controls.classList.remove("hidden");
-            startGame();
-          }, 400);
-        }
-        bar.style.width = progress + '%';
-        if (progress > 60) loadText.textContent = "Spawning tactical operators...";
-      }, 150);
-    };
-
-    document.getElementById("restart-btn").onclick = () => {
-      gameoverScreen.classList.add("hidden");
-      lobbyScreen.classList.remove("hidden");
-    };
-
-    function startGame() {
-      gameState = 'playing';
-      score = 0;
-      player.hp = 100;
-      player.x = 3.5; player.y = 3.5; player.angle = 0;
-      bots = [
-        { x: 6.5, y: 6.5, hp: 100 },
-        { x: 8.5, y: 2.5, hp: 100 },
-        { x: 2.5, y: 7.5, hp: 100 }
-      ];
-      bullets = [];
-    }
-
-    function update() {
-      if (gameState !== 'playing') return;
-
-      // Move player based on joystick vector
-      if (moveDir.x !== 0 || moveDir.y !== 0) {
-        let moveSpeed = 0.03;
-        let cos = Math.cos(player.angle);
-        let sin = Math.sin(player.angle);
-        
-        // Forward/Backward and Strafe
-        let dx = (-moveDir.y * cos - moveDir.x * sin) * moveSpeed;
-        let dy = (-moveDir.y * sin + moveDir.x * cos) * moveSpeed;
-
-        if (map[Math.floor(player.y)][Math.floor(player.x + dx)] === 0) player.x += dx;
-        if (map[Math.floor(player.y + dy)][Math.floor(player.x)] === 0) player.y += dy;
-      }
-
-      // Continuous Firing handling (does not lock movement)
-      if (isFiring && fireCooldown <= 0) {
-        bullets.push({ x: player.x, y: player.y, angle: player.angle, life: 40 });
-        fireCooldown = 12; // rate of fire
-      }
-      if (fireCooldown > 0) fireCooldown--;
-
-      // Update bullets
-      for (let i = bullets.length - 1; i >= 0; i--) {
-        let b = bullets[i];
-        b.x += Math.cos(b.angle) * 0.2;
-        b.y += Math.sin(b.angle) * 0.2;
-        b.life--;
-
-        // Wall hit check
-        if (map[Math.floor(b.y)] && map[Math.floor(b.y)][Math.floor(b.x)] === 1 || b.life <= 0) {
-          bullets.splice(i, 1);
-          continue;
-        }
-
-        // Bot hit check
-        for (let j = bots.length - 1; j >= 0; j--) {
-          let bot = bots[j];
-          let dist = Math.hypot(b.x - bot.x, b.y - bot.y);
-          if (dist < 0.4) {
-            bot.hp -= 50;
-            bullets.splice(i, 1);
-            if (bot.hp <= 0) {
-              bots.splice(j, 1);
-              score += 1;
-              // Respawn bot
-              setTimeout(() => {
-                if (gameState === 'playing') {
-                  bots.push({ x: Math.random() * 6 + 2, y: Math.random() * 6 + 2, hp: 100 });
-                }
-              }, 2000);
-            }
-            break;
-          }
-        }
-      }
-
-      // Update HUD
-      document.getElementById("hud-score").textContent = `Kills: ${score}`;
-      document.getElementById("hud-health").textContent = `HP: ${Math.max(0, Math.floor(player.hp))}`;
-    }
-
-    function render() {
-      if (gameState !== 'playing') return;
-
-      // Draw 3D Raycasted View
-      ctx.fillStyle = "#090d16"; // Ceiling
-      ctx.fillRect(0, 0, canvas.width, canvas.height / 2);
-      ctx.fillStyle = "#161e31"; // Floor
-      ctx.fillRect(0, canvas.height / 2, canvas.width, canvas.height / 2);
-
-      let numRays = canvas.width / 2;
-      let fov = Math.PI / 3;
-
-      for (let i = 0; i < numRays; i++) {
-        let rayAngle = player.angle - fov / 2 + (i / numRays) * fov;
-        let distance = 0;
-        let hitWall = false;
-
-        let cos = Math.cos(rayAngle);
-        let sin = Math.sin(rayAngle);
-
-        while (!hitWall && distance < 12) {
-          distance += 0.05;
-          let testX = Math.floor(player.x + cos * distance);
-          let testY = Math.floor(player.y + sin * distance);
-
-          if (testX < 0 || testX >= 10 || testY < 0 || testY >= 10) {
-            hitWall = true;
-            distance = 12;
-          } else if (map[testY][testX] === 1) {
-            hitWall = true;
-          }
-        }
-
-        let wallHeight = (canvas.height / (distance * Math.cos(rayAngle - player.angle)));
-        let x = i * (canvas.width / numRays);
-        let y = (canvas.height / 2) - wallHeight / 2;
-
-        let shade = Math.max(20, 220 - distance * 18);
-        ctx.fillStyle = `rgb(${shade * 0.4}, ${shade}, ${shade * 0.9})`;
-        ctx.fillRect(x, y, canvas.width / numRays + 1, wallHeight);
-      }
-
-      // Render Bots in 3D Space
-      for (let bot of bots) {
-        let bx = bot.x - player.x;
-        let by = bot.y - player.y;
-
-        let rotX = bx * Math.cos(-player.angle) - by * Math.sin(-player.angle);
-        let rotY = bx * Math.sin(-player.angle) + by * Math.cos(-player.angle);
-
-        if (rotY > 0) {
-          let screenX = (canvas.width / 2) + (rotX / rotY) * (canvas.width);
-          let botSize = Math.abs(canvas.height / rotY);
-
-          ctx.fillStyle = "#ff3366";
-          ctx.beginPath();
-          ctx.arc(screenX, canvas.height / 2, Math.max(5, botSize / 6), 0, Math.PI * 2);
-          ctx.fill();
-        }
-      }
-
-      // Draw Weapon Crosshair & Muzzle Flash on Screen
-      ctx.strokeStyle = "rgba(0, 255, 204, 0.6)";
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.arc(canvas.width / 2, canvas.height / 2, 12, 0, Math.PI * 2);
-      ctx.stroke();
-
-      if (isFiring) {
-        ctx.fillStyle = "rgba(255, 255, 0, 0.8)";
-        ctx.beginPath();
-        ctx.arc(canvas.width / 2 + 30, canvas.height / 2 + 40, 25, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    }
-
-    function loop() {
-      update();
-      render();
-      requestAnimationFrame(loop);
-    }
-
-    loop();
-  </script>
-</body>
-</html>
+    // Movement Tuning for Tactical FPS Feel
+    GetCharacterMovement()->MaxWalkSpeed = 650.0f;
+    GetC
